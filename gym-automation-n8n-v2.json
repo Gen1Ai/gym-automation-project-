@@ -1,0 +1,2939 @@
+{
+  "name": "Gym Automation v2 - Full Suite",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Gym Automation v2 - Full Suite\n\n**Per gym setup (sirf yeh karna hai):**\n1. 'Gym Config' node mein is gym ki values daalo (naam, Sheet ID, owner phone/email, backup folder, dashboard key)\n2. Google Sheet mein 3 tabs: `Members`, `Payments`, `Failed Messages` (columns README mein)\n3. Credentials select karo: Google Sheets, Google Drive, Gmail, WhatsApp Business Cloud, Google Gemini\n4. 'WhatsApp Send' node mein apna Phone Number ID daalo\n5. Test karo, phir Activate\n\n**Naye gym ke liye:** workflow Duplicate karo, sirf 'Gym Config' + credentials badlo. Har gym ka Sheet, backup aur WhatsApp number alag rehta hai.",
+        "height": 380,
+        "width": 640
+      },
+      "id": "693754a2-44f3-527f-8f0a-5eb6d30fcbd9",
+      "name": "Setup Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -560
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1. Signup: duplicate check, payment log, AI welcome",
+        "height": 80,
+        "width": 760
+      },
+      "id": "50a395fd-c054-5347-a4a1-7e5e7addcd7a",
+      "name": "Label 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -230
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Renewal: expiry update, payment log",
+        "height": 80,
+        "width": 760
+      },
+      "id": "685dfc6a-9b8e-54e7-a4ff-6231d528a74f",
+      "name": "Label 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        270
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. Payment confirmation (Pending -> Paid)",
+        "height": 80,
+        "width": 760
+      },
+      "id": "856fc70d-3470-50af-8d2a-478b2f7cee0a",
+      "name": "Label 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        670
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4. Daily: auto Expired + AI renewal reminders",
+        "height": 80,
+        "width": 760
+      },
+      "id": "5e7d1434-28da-5d74-be66-82fbcb2db81b",
+      "name": "Label 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5. Weekly report: WhatsApp + Email",
+        "height": 80,
+        "width": 760
+      },
+      "id": "26f395de-699f-50ad-afbe-7f74c4de678b",
+      "name": "Label 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        1850
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 6. Weekly backup to Google Drive",
+        "height": 80,
+        "width": 760
+      },
+      "id": "7a8de1cd-3c5c-5ea5-b3e1-c48c9319933e",
+      "name": "Label 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 7. Owner dashboard (browser page)",
+        "height": 80,
+        "width": 760
+      },
+      "id": "f1a8dd27-4c7c-5929-882d-559739bdcd1b",
+      "name": "Label 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        2530
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Error handling: failed WhatsApp messages are retried 3 times, logged and emailed",
+        "height": 80,
+        "width": 800
+      },
+      "id": "d1a32152-7b53-5562-b523-866c1868b6ac",
+      "name": "Label 8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        330
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Gym Membership Signup",
+        "formDescription": "Join karne ke liye apni details bharein.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "WhatsApp Number",
+              "placeholder": "03XXXXXXXXX",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Plan",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Monthly"
+                  },
+                  {
+                    "option": "Quarterly"
+                  },
+                  {
+                    "option": "Yearly"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Fee Paid",
+              "fieldType": "number"
+            },
+            {
+              "fieldLabel": "Payment Status",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Paid"
+                  },
+                  {
+                    "option": "Pending"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Payment Method",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Cash"
+                  },
+                  {
+                    "option": "Easypaisa"
+                  },
+                  {
+                    "option": "JazzCash"
+                  },
+                  {
+                    "option": "Bank Transfer"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "31d5b727-ada6-5862-92ee-38e05cc69e81",
+      "name": "Signup Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -820,
+        0
+      ],
+      "webhookId": "c0a80001-0001-4001-8001-000000000001"
+    },
+    {
+      "parameters": {
+        "formTitle": "Membership Renewal",
+        "formDescription": "Membership renew karne ke liye details bharein.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "WhatsApp Number",
+              "placeholder": "03XXXXXXXXX",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Plan",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Monthly"
+                  },
+                  {
+                    "option": "Quarterly"
+                  },
+                  {
+                    "option": "Yearly"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Fee Paid",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Payment Method",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Cash"
+                  },
+                  {
+                    "option": "Easypaisa"
+                  },
+                  {
+                    "option": "JazzCash"
+                  },
+                  {
+                    "option": "Bank Transfer"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "00a0f7a6-f6c3-5cb5-922f-beb182646d4a",
+      "name": "Renewal Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -820,
+        130
+      ],
+      "webhookId": "c0a80001-0001-4001-8001-000000000002"
+    },
+    {
+      "parameters": {
+        "formTitle": "Payment Received",
+        "formDescription": "Pending payment confirm karne ke liye (reception use).",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "WhatsApp Number",
+              "placeholder": "03XXXXXXXXX",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Amount Received",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Payment Method",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Cash"
+                  },
+                  {
+                    "option": "Easypaisa"
+                  },
+                  {
+                    "option": "JazzCash"
+                  },
+                  {
+                    "option": "Bank Transfer"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6a6522e-5196-541b-8e69-21ef5b04844b",
+      "name": "Payment Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -820,
+        260
+      ],
+      "webhookId": "c0a80001-0001-4001-8001-000000000003"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "6ba068b3-1336-502d-8401-5009191fb048",
+      "name": "Daily 9AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -820,
+        390
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "38691ad5-729d-56e8-a90c-fd8f1323c0e0",
+      "name": "Weekly Report Monday",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -820,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                0
+              ],
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "id": "05f6c044-74da-5166-8094-d2437d697282",
+      "name": "Weekly Backup Sunday",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -820,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "gym-dashboard",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "eb698f67-9ece-504d-b000-90c0180d3ada",
+      "name": "Dashboard Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -820,
+        780
+      ],
+      "webhookId": "c0a80001-0001-4001-8001-000000000004"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d3948eb2-934f-5ede-bb76-e3a18f598af2",
+              "name": "gymName",
+              "value": "Iron Fitness Gym",
+              "type": "string"
+            },
+            {
+              "id": "489c073a-1649-5971-95e4-fb98c0b9e535",
+              "name": "sheetId",
+              "value": "YOUR_GOOGLE_SHEET_ID",
+              "type": "string"
+            },
+            {
+              "id": "53af5f1f-9c40-53dc-9f7f-83a83aaacf2e",
+              "name": "ownerPhone",
+              "value": "923001234567",
+              "type": "string"
+            },
+            {
+              "id": "a599b4cc-386d-5b35-b9d4-dee131b0ec95",
+              "name": "ownerEmail",
+              "value": "owner@example.com",
+              "type": "string"
+            },
+            {
+              "id": "a2c1465f-1ef5-5cad-a0b5-c7192ec530b6",
+              "name": "backupFolderId",
+              "value": "YOUR_BACKUP_FOLDER_ID",
+              "type": "string"
+            },
+            {
+              "id": "da8e00d1-e48a-5308-bb9a-a6fa12b39d08",
+              "name": "dashboardKey",
+              "value": "change-this-secret-key",
+              "type": "string"
+            },
+            {
+              "id": "b5999ffc-5018-5a30-8e23-e29d5dc6002a",
+              "name": "currency",
+              "value": "Rs",
+              "type": "string"
+            },
+            {
+              "id": "15c71fcf-da9b-5881-bca3-15e07821c11a",
+              "name": "reminderDays",
+              "value": 3,
+              "type": "number"
+            },
+            {
+              "id": "ea6b8349-0c7e-5ed3-8cc1-0d2da7865a28",
+              "name": "tzOffsetHours",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "dc420eea-0127-54da-9cd2-2fc7f4704cca",
+              "name": "flow",
+              "value": "={{ $prevNode.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "8fb26b98-51dc-52f0-bbe7-6170661f4e4b",
+      "name": "Gym Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -560,
+        390
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "40e6cdbe-b202-517b-9fc2-629fd0113553",
+                    "leftValue": "={{ $json.flow }}",
+                    "rightValue": "Signup Form",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Signup Form"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d8a321d1-8fb6-5b11-b70c-c6e90f905cc7",
+                    "leftValue": "={{ $json.flow }}",
+                    "rightValue": "Renewal Form",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Renewal Form"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0b952e87-b6af-5cea-9475-934813befff5",
+                    "leftValue": "={{ $json.flow }}",
+                    "rightValue": "Payment Form",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Payment Form"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dfabbf59-4d20-5c91-98e6-105ce5635e73",
+                    "leftValue": "={{ $json.flow }}",
+                    "rightValue": "Daily 9AM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Daily 9AM"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "842f9818-2e82-58a7-8235-f479f53d1060",
+                    "leftValue": "={{ $json.flow }}",
+                    "rightValue": "Weekly Report Monday",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Weekly Report Monday"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "83ba471b-9e26-57e0-8c70-0d1ac3f3314b",
+                    "leftValue": "={{ $json.flow }}",
+                    "rightValue": "Weekly Backup Sunday",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Weekly Backup Sunday"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ad55318e-5ca5-5094-afcd-a4f3ad565c77",
+                    "leftValue": "={{ $json.flow }}",
+                    "rightValue": "Dashboard Webhook",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Dashboard Webhook"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "23a8067c-7f2b-563c-88dc-a09132f66e2b",
+      "name": "Route by Flow",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -300,
+        390
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "0edfa4b7-18c4-5aae-bbbf-296464a949b6",
+      "name": "Get Members (Signup)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst f = $('Signup Form').first().json;\nconst members = $input.all().map(i => i.json).filter(r => r['Member ID'] || r.Phone);\nconst phone = norm(f['WhatsApp Number']);\nconst dup = members.find(r => norm(r.Phone) === phone);\nconst ids = members.map(r => parseInt(String(r['Member ID'] || '').replace(/\\D/g, '')) || 0);\nconst next = Math.max(0, ...ids) + 1;\nconst plan = f['Plan'] || 'Monthly';\nreturn [{ json: {\n  isDuplicate: !!dup,\n  existingName: dup ? dup.Name : '',\n  memberId: 'M' + String(next).padStart(4, '0'),\n  name: f['Full Name'],\n  phone,\n  plan,\n  fee: Number(f['Fee Paid']) || 0,\n  paymentStatus: f['Payment Status'] || 'Paid',\n  paymentMethod: f['Payment Method'] || 'Cash',\n  joinDate: todayStr,\n  expiry: addDays(todayStr, PLAN_DAYS[plan] || 30),\n  status: 'Active'\n} }];"
+      },
+      "id": "a2d27bd4-3cb9-5d61-8168-a9a5e61f795d",
+      "name": "Build Member Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "48d2176c-1512-548e-b2e2-21a3679fc86e",
+              "leftValue": "={{ $json.isDuplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "711a746c-baba-56c1-9c14-bc072ac7bf00",
+      "name": "Is Duplicate?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst m = $input.first().json;\nreturn [{ json: { name: m.name, phone: m.phone, type: 'Duplicate', message: `Salam ${m.name}! Yeh number pehle se ${cfg.gymName} mein registered hai (${m.existingName}). Renewal ya madad ke liye reception se rabta karein.` } }];"
+      },
+      "id": "e0f2abd6-7f70-5651-b5fa-6cbc06098d77",
+      "name": "Duplicate Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Member ID": "={{ $json.memberId }}",
+            "Name": "={{ $json.name }}",
+            "Phone": "={{ $json.phone }}",
+            "Plan": "={{ $json.plan }}",
+            "Fee": "={{ $json.fee }}",
+            "Join Date": "={{ $json.joinDate }}",
+            "Expiry": "={{ $json.expiry }}",
+            "Status": "={{ $json.status }}",
+            "Payment Status": "={{ $json.paymentStatus }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Member ID",
+              "displayName": "Member ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan",
+              "displayName": "Plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fee",
+              "displayName": "Fee",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Join Date",
+              "displayName": "Join Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expiry",
+              "displayName": "Expiry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "9116d73a-44bb-5011-9658-4fd2fb4cbbbb",
+      "name": "Save Member",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Payments",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Payment ID": "={{ 'P' + Date.now() }}",
+            "Member ID": "={{ $('Build Member Record').first().json.memberId }}",
+            "Name": "={{ $('Build Member Record').first().json.name }}",
+            "Phone": "={{ $('Build Member Record').first().json.phone }}",
+            "Amount": "={{ $('Build Member Record').first().json.fee }}",
+            "Method": "={{ $('Build Member Record').first().json.paymentMethod }}",
+            "Type": "Signup",
+            "Date": "={{ $('Build Member Record').first().json.joinDate }}",
+            "Status": "={{ $('Build Member Record').first().json.paymentStatus }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Payment ID",
+              "displayName": "Payment ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Member ID",
+              "displayName": "Member ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Method",
+              "displayName": "Method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "a17399a5-a1a7-55d2-bc5d-107277631173",
+      "name": "Log Signup Payment",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write ONE short motivational WhatsApp line (max 20 words) in friendly Roman Urdu for {{ $('Build Member Record').first().json.name }}, who just joined {{ $('Gym Config').first().json.gymName }} on the {{ $('Build Member Record').first().json.plan }} plan. Use at most one emoji. Output only the line."
+      },
+      "id": "59b4f335-0940-5a11-9369-4c258961b174",
+      "name": "AI Motivation (Welcome)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1200,
+        60
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "id": "e0877bec-be02-5d41-9613-fab29cf2385a",
+      "name": "Gemini (Welcome)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst m = $('Build Member Record').first().json;\nconst ai = String($input.first().json.text || '').trim() || 'Aaj se hi shuru karein, consistency hi asal taqat hai! 💪';\nconst payLine = m.paymentStatus === 'Paid' ? 'Payment: Received ✅' : 'Payment: Pending ⏳';\nreturn [{ json: { name: m.name, phone: m.phone, type: 'Welcome', message: `Assalam o Alaikum ${m.name}! 💪\\n${cfg.gymName} mein khush aamdeed.\\nMember ID: ${m.memberId}\\nPlan: ${m.plan}\\nExpiry: ${m.expiry}\\n${payLine}\\n\\n${ai}` } }];"
+      },
+      "id": "8404f455-570f-5049-9c42-9022fc2baa4e",
+      "name": "Build Welcome Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "6eab089c-22ba-5190-b0e4-555778f2a641",
+      "name": "Get Members (Renewal)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        500
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst f = $('Renewal Form').first().json;\nconst phone = norm(f['WhatsApp Number']);\nconst members = $input.all().map(i => i.json).filter(r => r['Member ID']);\nconst m = members.find(r => norm(r.Phone) === phone);\nif (!m) return [{ json: { found: false, phone } }];\nconst plan = f['Plan'] || m.Plan || 'Monthly';\nconst curExp = isNaN(dayNum(m.Expiry)) ? 0 : dayNum(m.Expiry);\nconst baseStr = new Date(Math.max(dayNum(todayStr), curExp) * 86400000).toISOString().slice(0, 10);\nconst newExpiry = addDays(baseStr, PLAN_DAYS[plan] || 30);\nreturn [{ json: { found: true, memberId: m['Member ID'], name: m.Name, phone, plan, fee: Number(f['Fee Paid']) || Number(m.Fee) || 0, method: f['Payment Method'] || 'Cash', oldExpiry: m.Expiry, newExpiry } }];"
+      },
+      "id": "ae0cf8a3-c65a-502b-8af7-c43dee60402d",
+      "name": "Build Renewal Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dc9bb3fd-76e4-5c2a-b5ac-1582ad7b1c9c",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "381a244b-8b90-5fef-ab4d-ef5c6a368bb0",
+      "name": "Member Found? (Renewal)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Member ID": "={{ $json.memberId }}",
+            "Plan": "={{ $json.plan }}",
+            "Fee": "={{ $json.fee }}",
+            "Expiry": "={{ $json.newExpiry }}",
+            "Status": "Active",
+            "Payment Status": "Paid"
+          },
+          "matchingColumns": [
+            "Member ID"
+          ],
+          "schema": [
+            {
+              "id": "Member ID",
+              "displayName": "Member ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan",
+              "displayName": "Plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fee",
+              "displayName": "Fee",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Join Date",
+              "displayName": "Join Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expiry",
+              "displayName": "Expiry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "fbecbd38-5547-5772-8639-01cd6179d79c",
+      "name": "Update Member (Renewal)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Payments",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Payment ID": "={{ 'P' + Date.now() }}",
+            "Member ID": "={{ $('Build Renewal Update').first().json.memberId }}",
+            "Name": "={{ $('Build Renewal Update').first().json.name }}",
+            "Phone": "={{ $('Build Renewal Update').first().json.phone }}",
+            "Amount": "={{ $('Build Renewal Update').first().json.fee }}",
+            "Method": "={{ $('Build Renewal Update').first().json.method }}",
+            "Type": "Renewal",
+            "Date": "={{ $now.toFormat('yyyy-LL-dd') }}",
+            "Status": "Paid"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Payment ID",
+              "displayName": "Payment ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Member ID",
+              "displayName": "Member ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Method",
+              "displayName": "Method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "13fae0fd-606c-538a-b985-492b4446d4c8",
+      "name": "Log Renewal Payment",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst m = $('Build Renewal Update').first().json;\nreturn [{ json: { name: m.name, phone: m.phone, type: 'Renewal', message: `Shukriya ${m.name}! ✅\\nAapki ${cfg.gymName} membership renew ho gayi.\\nPlan: ${m.plan}\\nNayi expiry: ${m.newExpiry}\\nPayment: ${cfg.currency || 'Rs'} ${m.fee}` } }];"
+      },
+      "id": "6b5b9de6-ce4d-567e-ab8d-8f25ae016446",
+      "name": "Build Renewal Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst m = $input.first().json;\nreturn [{ json: { name: '', phone: m.phone, type: 'NotFound', message: `Salam! Yeh number (${m.phone}) ${cfg.gymName} ke records mein nahi mila. Pehle signup karein ya reception se rabta karein.` } }];"
+      },
+      "id": "a5537fcc-84a7-57b3-b79f-fc833d5149df",
+      "name": "Not Found Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "4671b4e7-2855-5757-b8aa-a4f150971549",
+      "name": "Get Members (Payment)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        900
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst f = $('Payment Form').first().json;\nconst phone = norm(f['WhatsApp Number']);\nconst members = $input.all().map(i => i.json).filter(r => r['Member ID']);\nconst m = members.find(r => norm(r.Phone) === phone);\nif (!m) return [{ json: { found: false, phone } }];\nreturn [{ json: { found: true, memberId: m['Member ID'], name: m.Name, phone, amount: Number(f['Amount Received']) || Number(m.Fee) || 0, method: f['Payment Method'] || 'Cash' } }];"
+      },
+      "id": "535eee3d-ed1b-5786-a65c-e29a64e63815",
+      "name": "Build Payment Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "930cee59-e521-5cb5-ae42-1f471232f981",
+              "leftValue": "={{ $json.found }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "115f7a18-a272-50d4-9057-e50348b70b69",
+      "name": "Member Found? (Payment)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Member ID": "={{ $json.memberId }}",
+            "Payment Status": "Paid"
+          },
+          "matchingColumns": [
+            "Member ID"
+          ],
+          "schema": [
+            {
+              "id": "Member ID",
+              "displayName": "Member ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan",
+              "displayName": "Plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fee",
+              "displayName": "Fee",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Join Date",
+              "displayName": "Join Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expiry",
+              "displayName": "Expiry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "2b143def-7f5f-5f40-9514-93336678f31d",
+      "name": "Update Payment Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        840
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Payments",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Payment ID": "={{ 'P' + Date.now() }}",
+            "Member ID": "={{ $('Build Payment Update').first().json.memberId }}",
+            "Name": "={{ $('Build Payment Update').first().json.name }}",
+            "Phone": "={{ $('Build Payment Update').first().json.phone }}",
+            "Amount": "={{ $('Build Payment Update').first().json.amount }}",
+            "Method": "={{ $('Build Payment Update').first().json.method }}",
+            "Type": "Payment",
+            "Date": "={{ $now.toFormat('yyyy-LL-dd') }}",
+            "Status": "Paid"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Payment ID",
+              "displayName": "Payment ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Member ID",
+              "displayName": "Member ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Method",
+              "displayName": "Method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "0fa0c23d-0de2-5f01-a13e-467cde64707e",
+      "name": "Log Payment",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        960,
+        840
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst m = $('Build Payment Update').first().json;\nreturn [{ json: { name: m.name, phone: m.phone, type: 'Payment', message: `Shukriya ${m.name}! ✅\\nAapki ${cfg.currency || 'Rs'} ${m.amount} ki payment (${m.method}) receive ho gayi hai.\\nMember ID: ${m.memberId}` } }];"
+      },
+      "id": "622aa004-3494-518e-96e8-50c07203b746",
+      "name": "Build Payment Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        840
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "b8985f4b-df7a-52d0-98fa-6b90a8e704b5",
+      "name": "Get Members (Daily)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        1400
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst out = [];\nfor (const it of $input.all()) {\n  const r = it.json;\n  if (!r['Member ID'] || !r.Expiry || r.Status === 'Expired') continue;\n  if (dayNum(r.Expiry) < dayNum(todayStr)) out.push({ json: { memberId: r['Member ID'], name: r.Name } });\n}\nreturn out;"
+      },
+      "id": "59ec56bc-3ef6-557a-aacc-a758dcfcb04f",
+      "name": "Find Newly Expired",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Member ID": "={{ $json.memberId }}",
+            "Status": "Expired"
+          },
+          "matchingColumns": [
+            "Member ID"
+          ],
+          "schema": [
+            {
+              "id": "Member ID",
+              "displayName": "Member ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan",
+              "displayName": "Plan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fee",
+              "displayName": "Fee",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Join Date",
+              "displayName": "Join Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expiry",
+              "displayName": "Expiry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Payment Status",
+              "displayName": "Payment Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "aa305b21-5d21-5cb4-a59d-e6ae7cd92d09",
+      "name": "Mark Expired",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        1300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst days = Number(cfg.reminderDays ?? 3);\nconst out = [];\nfor (const it of $input.all()) {\n  const r = it.json;\n  if (!r['Member ID'] || !r.Expiry || r.Status === 'Expired') continue;\n  const d = dayNum(r.Expiry) - dayNum(todayStr);\n  if (d === days || d === 0) out.push({ json: { memberId: r['Member ID'], name: r.Name, phone: norm(r.Phone), plan: r.Plan, expiry: r.Expiry, daysLeft: d } });\n}\nreturn out;"
+      },
+      "id": "0f44f94a-df1a-59be-98f0-fcfe99b6a65e",
+      "name": "Find Expiring Soon",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write ONE short friendly line (max 20 words) in Roman Urdu encouraging {{ $json.name }} to renew their gym membership and stay consistent. Use at most one emoji. Output only the line."
+      },
+      "id": "a84b07fb-ca6e-50c0-a05f-08bde43c0c14",
+      "name": "AI Motivation (Reminder)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        480,
+        1500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "id": "288c09cb-4b2a-5aa0-b463-05320bbabaff",
+      "name": "Gemini (Reminder)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        480,
+        1680
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst soon = $('Find Expiring Soon').all().map(i => i.json);\nconst ai = $input.all().map(i => String(i.json.text || '').trim());\nreturn soon.map((m, i) => ({ json: { name: m.name, phone: m.phone, type: 'Reminder', message: `Salam ${m.name}! ⏰\\nAapki ${cfg.gymName} membership ${m.daysLeft === 0 ? 'aaj' : m.daysLeft + ' din mein'} expire ho rahi hai (${m.expiry}).\\nRenew karne ke liye reception par rabta karein.\\n\\n${ai[i] || 'Apni fitness journey jari rakhein! 💪'}` } }));"
+      },
+      "id": "4c56566d-0497-5194-9993-bc6b86c19e17",
+      "name": "Build Reminder Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        1500
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "47640504-aaa9-5df9-921c-eaaf6aa3e386",
+      "name": "Get Members (Report)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        1950
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Payments",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "0df13cec-b862-5c3e-b801-54d9cf88b428",
+      "name": "Get Payments (Report)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        1950
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst members = $('Get Members (Report)').all().map(i => i.json).filter(r => r['Member ID']);\nconst pays = $input.all().map(i => i.json).filter(r => r['Payment ID']);\nconst t = dayNum(todayStr);\nconst cur = cfg.currency || 'Rs';\nlet active = 0, expired = 0, newJoins = 0, expSoon = 0, pendingCount = 0, pendingAmount = 0;\nfor (const r of members) {\n  const d = dayNum(r.Expiry) - t;\n  if (r.Status === 'Expired' || d < 0) expired++; else active++;\n  if (d >= 0 && d <= 7) expSoon++;\n  const age = t - dayNum(r['Join Date']);\n  if (age >= 0 && age < 7) newJoins++;\n  if (r['Payment Status'] === 'Pending') { pendingCount++; pendingAmount += Number(r.Fee) || 0; }\n}\nconst weekRevenue = pays.filter(p => { const a = t - dayNum(p.Date); return p.Status === 'Paid' && a >= 0 && a < 7; }).reduce((s, p) => s + (Number(p.Amount) || 0), 0);\nconst text = `📊 ${cfg.gymName} - Weekly Report (${todayStr})\\nTotal members: ${members.length}\\nActive: ${active} | Expired: ${expired}\\nNaye members (7 din): ${newJoins}\\nIs hafte expire hone wale: ${expSoon}\\nIs hafte collection: ${cur} ${weekRevenue}\\nPending payments: ${pendingCount} (${cur} ${pendingAmount})`;\nconst row = (a, b) => `<tr><td style=\"padding:6px 12px;border-bottom:1px solid #eee\">${esc(a)}</td><td style=\"padding:6px 12px;border-bottom:1px solid #eee\"><b>${esc(b)}</b></td></tr>`;\nconst html = `<div style=\"font-family:Arial,sans-serif\"><h2>${esc(cfg.gymName)} - Weekly Report</h2><p>${esc(todayStr)}</p><table style=\"border-collapse:collapse\">` +\n  row('Total members', members.length) + row('Active', active) + row('Expired', expired) + row('New members (7 days)', newJoins) +\n  row('Expiring this week', expSoon) + row('Collection this week', cur + ' ' + weekRevenue) + row('Pending payments', pendingCount + ' (' + cur + ' ' + pendingAmount + ')') + '</table></div>';\nreturn [{ json: { name: 'Owner', type: 'Report', phone: norm(cfg.ownerPhone), message: text, ownerEmail: cfg.ownerEmail, subject: `${cfg.gymName} - Weekly Report (${todayStr})`, html } }];"
+      },
+      "id": "22934f33-658a-5253-8e13-62296bd209d8",
+      "name": "Build Weekly Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        1950
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.ownerEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "d4ebd308-b489-5b48-b92f-bedf6c41179a",
+      "name": "Email Weekly Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        2060
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "name": "={{ $('Gym Config').first().json.gymName }} Backup {{ $now.toFormat('yyyy-LL-dd') }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.backupFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "8367b4a1-ecd4-5700-9fa0-259ef506e21a",
+      "name": "Backup Spreadsheet",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        0,
+        2350
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "24e70ca7-c218-5a0f-b4c0-9d6afacc304a",
+              "leftValue": "={{ $('Dashboard Webhook').first().json.query.key }}",
+              "rightValue": "={{ $('Gym Config').first().json.dashboardKey }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a3830752-af75-53d9-9577-c9b16bb51036",
+      "name": "Valid Dashboard Key?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        2600
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Members",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "1707c4bd-b091-596b-82c1-4525f88255de",
+      "name": "Get Members (Dashboard)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        2580
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Payments",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "985456e1-1492-5e11-84ba-170d82e04ada",
+      "name": "Get Payments (Dashboard)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        2580
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst members = $('Get Members (Dashboard)').all().map(i => i.json).filter(r => r['Member ID']);\nconst pays = $input.all().map(i => i.json).filter(r => r['Payment ID']);\nconst t = dayNum(todayStr);\nconst cur = cfg.currency || 'Rs';\nlet active = 0, expired = 0, soon = 0, pending = 0, pendingAmt = 0;\nconst soonRows = [], pendRows = [];\nfor (const r of members) {\n  const d = dayNum(r.Expiry) - t;\n  if (r.Status === 'Expired' || d < 0) expired++; else active++;\n  if (d >= 0 && d <= 7) { soon++; soonRows.push({ r, d }); }\n  if (r['Payment Status'] === 'Pending') { pending++; pendingAmt += Number(r.Fee) || 0; pendRows.push(r); }\n}\nconst month = todayStr.slice(0, 7);\nconst monthRev = pays.filter(p => p.Status === 'Paid' && String(p.Date).startsWith(month)).reduce((s, p) => s + (Number(p.Amount) || 0), 0);\nconst card = (label, value) => `<div class=\"card\"><div class=\"v\">${esc(value)}</div><div class=\"l\">${esc(label)}</div></div>`;\nconst rows1 = soonRows.sort((a, b) => a.d - b.d).map(({ r, d }) => `<tr><td>${esc(r.Name)}</td><td>${esc(r.Phone)}</td><td>${esc(r.Plan)}</td><td>${esc(r.Expiry)}</td><td>${d === 0 ? 'Today' : d + ' days'}</td></tr>`).join('') || '<tr><td colspan=\"5\">Koi nahi</td></tr>';\nconst rows2 = pendRows.map(r => `<tr><td>${esc(r.Name)}</td><td>${esc(r.Phone)}</td><td>${esc(r.Plan)}</td><td>${esc(cur)} ${esc(r.Fee)}</td></tr>`).join('') || '<tr><td colspan=\"4\">Koi nahi</td></tr>';\nconst html = `<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>${esc(cfg.gymName)} Dashboard</title>\n<style>body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#1c2833}header{background:#1c2833;color:#fff;padding:16px 20px}h1{margin:0;font-size:20px}header small{opacity:.7}main{padding:16px;max-width:960px;margin:auto}\n.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}.v{font-size:26px;font-weight:700}.l{font-size:13px;color:#667}\nh2{font-size:16px;margin:24px 0 8px}table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}th,td{text-align:left;padding:9px 12px;border-bottom:1px solid #eee;font-size:14px}th{background:#eef1f4}</style></head>\n<body><header><h1>${esc(cfg.gymName)} - Dashboard</h1><small>Updated: ${esc(todayStr)}</small></header><main>\n<div class=\"cards\">${card('Total members', members.length)}${card('Active', active)}${card('Expired', expired)}${card('Expiring in 7 days', soon)}${card('Pending payments', pending + ' (' + cur + ' ' + pendingAmt + ')')}${card('Collection this month', cur + ' ' + monthRev)}</div>\n<h2>Expiring in next 7 days</h2><table><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Expiry</th><th>Left</th></tr>${rows1}</table>\n<h2>Pending payments</h2><table><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Amount</th></tr>${rows2}</table></main></body></html>`;\nreturn [{ json: { html } }];"
+      },
+      "id": "5c85bb5e-3af4-596d-9e7f-91d32071fe28",
+      "name": "Build Dashboard HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        2580
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "7d6497a6-c433-53d2-b977-18a4c8b44cf3",
+      "name": "Respond Dashboard",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        2580
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Unauthorized",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "60be245f-583e-59f9-808a-d414e086cd02",
+      "name": "Respond Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        2780
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "YOUR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "id": "20896961-9ee3-59c8-b219-82f7b2d0fd0d",
+      "name": "WhatsApp Send",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1700,
+        440
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Gym Config').first().json;\nconst off = Number(cfg.tzOffsetHours ?? 5);\nconst todayStr = new Date(Date.now() + off * 3600000).toISOString().slice(0, 10);\nconst dayNum = s => Math.floor(Date.parse(String(s).slice(0, 10) + 'T00:00:00Z') / 86400000);\nconst addDays = (s, n) => new Date((dayNum(s) + n) * 86400000).toISOString().slice(0, 10);\nconst norm = p => { let x = String(p || '').replace(/\\D/g, ''); if (x.startsWith('0')) x = '92' + x.slice(1); else if (x.length === 10 && x.startsWith('3')) x = '92' + x; return x; };\nconst PLAN_DAYS = { Monthly: 30, Quarterly: 90, Yearly: 365 };\nconst esc = s => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\nconst sources = ['Build Welcome Message', 'Duplicate Message', 'Not Found Message', 'Build Renewal Message', 'Build Payment Message', 'Build Reminder Message', 'Build Weekly Report'];\nreturn $input.all().map((it, i) => {\n  let src = {};\n  for (const s of sources) {\n    try { const m = $(s).itemMatching(i); if (m && m.json && m.json.phone) { src = m.json; break; } } catch (e) {}\n  }\n  const e = it.json.error;\n  const err = typeof e === 'string' ? e : (e && (e.message || e.description)) || JSON.stringify(e || it.json);\n  return { json: { date: todayStr, name: src.name || it.json.name || '', phone: src.phone || it.json.phone || '', type: src.type || '', flow: cfg.flow, message: String(src.message || it.json.message || '').slice(0, 500), error: String(err).slice(0, 500) } };\n});"
+      },
+      "id": "ac694646-fac1-5e8c-863f-82a745e19ff5",
+      "name": "Build Failure Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Gym Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Failed Messages",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $json.date }}",
+            "Name": "={{ $json.name }}",
+            "Phone": "={{ $json.phone }}",
+            "Flow": "={{ $json.flow }}",
+            "Message": "={{ $json.message }}",
+            "Error": "={{ $json.error }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Flow",
+              "displayName": "Flow",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "bb68ded8-36db-55d8-ad44-19cb89d0e665",
+      "name": "Log Failed Message",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2200,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Gym Config').first().json.ownerEmail }}",
+        "subject": "=⚠️ WhatsApp message failed ({{ $json.type }})",
+        "emailType": "html",
+        "message": "=<p>WhatsApp message to <b>{{ $json.name }}</b> ({{ $json.phone }}) failed after 3 attempts.</p><p>Type: {{ $json.type }}<br>Flow: {{ $json.flow }}</p><p>Error: {{ $json.error }}</p>",
+        "options": {}
+      },
+      "id": "96591867-ffc7-538f-8844-a25bfc616f47",
+      "name": "Email Owner: Failed Message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2200,
+        640
+      ]
+    }
+  ],
+  "connections": {
+    "Signup Form": {
+      "main": [
+        [
+          {
+            "node": "Gym Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Renewal Form": {
+      "main": [
+        [
+          {
+            "node": "Gym Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payment Form": {
+      "main": [
+        [
+          {
+            "node": "Gym Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 9AM": {
+      "main": [
+        [
+          {
+            "node": "Gym Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Report Monday": {
+      "main": [
+        [
+          {
+            "node": "Gym Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Backup Sunday": {
+      "main": [
+        [
+          {
+            "node": "Gym Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dashboard Webhook": {
+      "main": [
+        [
+          {
+            "node": "Gym Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gym Config": {
+      "main": [
+        [
+          {
+            "node": "Route by Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Flow": {
+      "main": [
+        [
+          {
+            "node": "Get Members (Signup)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Members (Renewal)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Members (Payment)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Members (Daily)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Members (Report)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Backup Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Valid Dashboard Key?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini (Welcome)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Motivation (Welcome)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members (Signup)": {
+      "main": [
+        [
+          {
+            "node": "Build Member Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Member Record": {
+      "main": [
+        [
+          {
+            "node": "Is Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Member",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Member": {
+      "main": [
+        [
+          {
+            "node": "Log Signup Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Signup Payment": {
+      "main": [
+        [
+          {
+            "node": "AI Motivation (Welcome)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Motivation (Welcome)": {
+      "main": [
+        [
+          {
+            "node": "Build Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members (Renewal)": {
+      "main": [
+        [
+          {
+            "node": "Build Renewal Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Renewal Update": {
+      "main": [
+        [
+          {
+            "node": "Member Found? (Renewal)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Member Found? (Renewal)": {
+      "main": [
+        [
+          {
+            "node": "Update Member (Renewal)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not Found Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Member (Renewal)": {
+      "main": [
+        [
+          {
+            "node": "Log Renewal Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Renewal Payment": {
+      "main": [
+        [
+          {
+            "node": "Build Renewal Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members (Payment)": {
+      "main": [
+        [
+          {
+            "node": "Build Payment Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Payment Update": {
+      "main": [
+        [
+          {
+            "node": "Member Found? (Payment)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Member Found? (Payment)": {
+      "main": [
+        [
+          {
+            "node": "Update Payment Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Not Found Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Payment Status": {
+      "main": [
+        [
+          {
+            "node": "Log Payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Payment": {
+      "main": [
+        [
+          {
+            "node": "Build Payment Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini (Reminder)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Motivation (Reminder)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members (Daily)": {
+      "main": [
+        [
+          {
+            "node": "Find Newly Expired",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Find Expiring Soon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Newly Expired": {
+      "main": [
+        [
+          {
+            "node": "Mark Expired",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Expiring Soon": {
+      "main": [
+        [
+          {
+            "node": "AI Motivation (Reminder)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Motivation (Reminder)": {
+      "main": [
+        [
+          {
+            "node": "Build Reminder Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members (Report)": {
+      "main": [
+        [
+          {
+            "node": "Get Payments (Report)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Payments (Report)": {
+      "main": [
+        [
+          {
+            "node": "Build Weekly Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Weekly Report": {
+      "main": [
+        [
+          {
+            "node": "Email Weekly Report",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Dashboard Key?": {
+      "main": [
+        [
+          {
+            "node": "Get Members (Dashboard)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members (Dashboard)": {
+      "main": [
+        [
+          {
+            "node": "Get Payments (Dashboard)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Payments (Dashboard)": {
+      "main": [
+        [
+          {
+            "node": "Build Dashboard HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Dashboard HTML": {
+      "main": [
+        [
+          {
+            "node": "Respond Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Welcome Message": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate Message": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Not Found Message": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Renewal Message": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Payment Message": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Reminder Message": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Send": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Build Failure Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Failure Record": {
+      "main": [
+        [
+          {
+            "node": "Log Failed Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Owner: Failed Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Karachi"
+  }
+}
